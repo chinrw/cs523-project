@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<!--Phoronix Test Suite v10.8.4-->
+<PhoronixTestSuite>
+  <SuiteInformation>
+    <Title>cs523</Title>
+    <Version>1.0.0</Version>
+    <TestType>System</TestType>
+    <Description>test shceduler</Description>
+    <Maintainer>chin39</Maintainer>
+    <PreRunMessage></PreRunMessage>
+    <PostRunMessage></PostRunMessage>
+    <RunMode></RunMode>
+    <RequiresCoreVersionMin></RequiresCoreVersionMin>
+    <RequiresCoreVersionMax></RequiresCoreVersionMax>
+  </SuiteInformation>
+  <Execute>
+    <Test>pts/compress-7zip-1.10.0</Test>
+  </Execute>
+  <Execute>
+    <Test>pts/build-linux-kernel-1.15.0</Test>
+    <Arguments>defconfig</Arguments>
+    <Description>Build: defconfig</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/build-linux-kernel-1.15.0</Test>
+    <Arguments>allmodconfig</Arguments>
+    <Description>Build: allmodconfig</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 process</Arguments>
+    <Description>Count: 1 - Type: Process</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 thread</Arguments>
+    <Description>Count: 1 - Type: Thread</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 process</Arguments>
+    <Description>Count: 2 - Type: Process</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 thread</Arguments>
+    <Description>Count: 2 - Type: Thread</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 process</Arguments>
+    <Description>Count: 4 - Type: Process</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 thread</Arguments>
+    <Description>Count: 4 - Type: Thread</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 process</Arguments>
+    <Description>Count: 8 - Type: Process</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 thread</Arguments>
+    <Description>Count: 8 - Type: Thread</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 process</Arguments>
+    <Description>Count: 16 - Type: Process</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>16 thread</Arguments>
+    <Description>Count: 16 - Type: Thread</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>32 process</Arguments>
+    <Description>Count: 32 - Type: Process</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>32 thread</Arguments>
+    <Description>Count: 32 - Type: Thread</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>32 process</Arguments>
+    <Description>Count: 48 - Type: Process</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/hackbench-1.0.0</Test>
+    <Arguments>32 thread</Arguments>
+    <Description>Count: 48 - Type: Thread</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/schbench-1.1.0</Test>
+    <Arguments>-m 64</Arguments>
+    <Description>Message Threads: 64</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/schbench-1.1.0</Test>
+    <Arguments>-m 128</Arguments>
+    <Description>Message Threads: 128</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/schbench-1.1.0</Test>
+    <Arguments>-m 256</Arguments>
+    <Description>Message Threads: 256</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/nginx-3.0.0</Test>
+    <Arguments>-c 200</Arguments>
+    <Description>Connections: 20</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/nginx-3.0.0</Test>
+    <Arguments>-c 200</Arguments>
+    <Description>Connections: 100</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/nginx-3.0.0</Test>
+    <Arguments>-c 200</Arguments>
+    <Description>Connections: 200</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/nginx-3.0.0</Test>
+    <Arguments>-c 500</Arguments>
+    <Description>Connections: 500</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/nginx-3.0.0</Test>
+    <Arguments>-c 1000</Arguments>
+    <Description>Connections: 1000</Description>
+  </Execute>
+  <Execute>
+    <Test>pts/nginx-3.0.0</Test>
+    <Arguments>-c 4000</Arguments>
+    <Description>Connections: 4000</Description>
+  </Execute>
+  <!-- <Execute> -->
+  <!--   <Test>pts/mysqlslap-1.3.0</Test> -->
+  <!--   <Arguments>-\-concurrency=256</Arguments> -->
+  <!--   <Description>Clients: 256</Description> -->
+  <!-- </Execute> -->
+  <Execute>
+    <Test>pts/numpy-1.2.1</Test>
+  </Execute>
+</PhoronixTestSuite>
