@@ -61,7 +61,7 @@ def get_core_types():
 
 
 def run_long_task(command):
-    process = subprocess.Popen(command, shell=True)
+    process = subprocess.Popen(command, shell=True, user="chin39", group="chin39")
     last_sample_time = time.time()
 
     while process.poll() is None:
