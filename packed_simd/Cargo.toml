@@ -10,4 +10,4 @@ packed_simd = "*"
 rayon = "*"
 rand = "*"
 libc = "*"
-
+itertools = "*"
