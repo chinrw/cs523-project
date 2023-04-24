@@ -18,7 +18,7 @@ fn main() {
     let num_threads: usize = if args.len() > 1 {
         args[1].parse().expect("Invalid number of threads")
     } else {
-        8
+        12
     };
 
     let mut rng = rand::thread_rng();
@@ -30,12 +30,22 @@ fn main() {
         .build()
         .unwrap();
 
-    let non_simd_thread_pool = ThreadPoolBuilder::new().num_threads(8).build().unwrap();
+    let num_threads_non_simd = args.get(2).and_then(|arg| arg.parse().ok()).unwrap_or(12);
+
+    let non_simd_thread_pool = ThreadPoolBuilder::new()
+        .num_threads(num_threads_non_simd)
+        .build()
+        .unwrap();
 
     let simd_cpu_ids = Arc::new(Mutex::new(HashMap::new()));
     let non_simd_cpu_ids = Arc::new(Mutex::new(HashMap::new()));
 
-    for _ in 0..50000 {
+    let num_interations = args
+        .get(3)
+        .and_then(|arg| arg.parse().ok())
+        .unwrap_or(100000);
+
+    for _ in 0..num_interations {
         let array1_clone = array1.clone();
         let array2_clone = array2.clone();
         let non_simd_cpu_ids_clone = non_simd_cpu_ids.clone();
