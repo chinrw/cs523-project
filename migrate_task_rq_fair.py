@@ -1,30 +1,39 @@
 import collections
 import json
-import re
 import subprocess
 import sys
 import time
 
+import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 from bcc import BPF
 
+fields = ["on_cpu", "new_cpu", "old_cpu", "pid", "jiffies"]
 ebpf_code = """
 #include <uapi/linux/ptrace.h>
 #include <linux/sched.h>
 
 struct data_t {
-    u32 cpu;
+    u32 on_cpu;
+    u32 new_cpu;
+    u32 old_cpu;
     u32 pid;
+    u64 jiffies;
 };
 
 BPF_PERF_OUTPUT(events);
 
-int trace_migrate_task_rq_fair(struct pt_regs *ctx, struct task_struct *p, int cpu) {
+int trace_migrate_task_rq_fair(struct pt_regs *ctx, struct task_struct *p, int new_cpu) {
     struct data_t data = {};
     
-    data.cpu = cpu;
+    data.on_cpu = bpf_get_smp_processor_id();
+    data.new_cpu = new_cpu;
+    data.old_cpu = 0XBADBEEF;
     data.pid = p->pid;
+    data.jiffies = bpf_jiffies64();
+    if (sizeof(data.old_cpu) == sizeof(task_thread_info(p)->cpu)) {
+        bpf_probe_read_kernel(&data.old_cpu, sizeof(data.old_cpu), &(task_thread_info(p)->cpu));
+    }
     
     events.perf_submit(ctx, &data, sizeof(data));
     return 0;
@@ -34,11 +43,12 @@ int trace_migrate_task_rq_fair(struct pt_regs *ctx, struct task_struct *p, int c
 
 smt_threads = [1, 3, 5, 7, 9, 11, 13, 15]
 
+task_balancing = []
 
 def process_event(cpu, data, size):
     event = b["events"].event(data)
     if event.pid != 0:  # Ignore PID 0
-        task_balancing.append((event.cpu, event.pid))
+        task_balancing.append([getattr(event, f) for f in fields])
 
 
 def get_core_types():
@@ -72,8 +82,9 @@ def run_long_task(command):
 
 def plot_task_balancing_data(task_balancing):
     cpu_counts = collections.defaultdict(int)
-    for cpu, _ in task_balancing:
-        cpu_counts[cpu] += 1
+    for values in task_balancing:
+        new_cpu = values[1]
+        cpu_counts[new_cpu] += 1
 
     core_types = get_core_types()
 
@@ -111,7 +122,7 @@ def plot_task_balancing_data(task_balancing):
     plt.savefig("task_balancing_bar_chart_cores.png")
 
 def save_data_to_json(task_balancing):
-    data = [{"cpu": cpu, "pid": pid } for cpu, pid in task_balancing]
+    data = [dict(zip(fields, values)) for values in task_balancing]
     with open("task_balancing_data.json", "w") as json_file:
         json.dump(data, json_file)
 
@@ -126,13 +137,12 @@ if __name__ == "__main__":
     b.attach_kprobe(event="migrate_task_rq_fair", fn_name="trace_migrate_task_rq_fair")
     b["events"].open_perf_buffer(process_event)
 
-    task_balancing = []
-
     print(f"Running long task: {long_task_command}")
     run_long_task(long_task_command)
+    print(task_balancing)
 
-    print("Saving task balancing data to JSON file...")
+    # print("Saving task balancing data to JSON file...")
     save_data_to_json(task_balancing)
 
-    print("Plotting task balancing data and saving the plot to an image file...")
+    # print("Plotting task balancing data and saving the plot to an image file...")
     plot_task_balancing_data(task_balancing)
