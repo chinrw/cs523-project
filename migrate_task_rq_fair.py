@@ -80,16 +80,11 @@ def run_long_task(command):
     print("Long task completed.")
 
 
-def plot_task_balancing_data(task_balancing):
-    cpu_counts = collections.defaultdict(int)
-    for values in task_balancing:
-        new_cpu = values[1]
-        cpu_counts[new_cpu] += 1
-
+def plot_per_cpu(file, cpu_counts):
     core_types = get_core_types()
 
-    x = sorted(cpu_counts.keys())
-    y = [cpu_counts[cpu] for cpu in x]
+    x = cpu_counts.keys()
+    y = cpu_counts.values
     core_labels = [core_types[cpu] for cpu in x]
 
     fig, ax = plt.subplots()
@@ -119,12 +114,7 @@ def plot_task_balancing_data(task_balancing):
     ax.set_xticklabels(x)  # Rotate x-axis labels
     plt.tight_layout()  # Adjust spacing
 
-    plt.savefig("task_balancing_bar_chart_cores.png")
-
-def save_data_to_json(task_balancing):
-    data = [dict(zip(fields, values)) for values in task_balancing]
-    with open("task_balancing_data.json", "w") as json_file:
-        json.dump(data, json_file)
+    plt.savefig(file)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -139,10 +129,15 @@ if __name__ == "__main__":
 
     print(f"Running long task: {long_task_command}")
     run_long_task(long_task_command)
-    print(task_balancing)
+
+    df = pd.DataFrame(task_balancing, columns=fields)
 
     # print("Saving task balancing data to JSON file...")
-    save_data_to_json(task_balancing)
+    # save_data_to_json(task_balancing)
+    df.to_json("task_balancing_data.json", orient="records")
+    df.to_csv("task_balancing_data.csv", index=False)
 
     # print("Plotting task balancing data and saving the plot to an image file...")
-    plot_task_balancing_data(task_balancing)
+    plot_per_cpu("on_cpu.png", df.groupby("on_cpu", sort=True).size())
+    plot_per_cpu("old_cpu.png", df.groupby("old_cpu", sort=True).size())
+    plot_per_cpu("new_cpu.png", df.groupby("new_cpu", sort=True).size())
