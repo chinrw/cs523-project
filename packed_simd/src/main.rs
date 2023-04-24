@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use libc::{c_uint, syscall, SYS_getcpu};
+use plotters::prelude::*;
 use std::collections::HashMap;
 use std::io;
 use std::sync::{Arc, Mutex};
@@ -85,6 +86,21 @@ fn main() {
         "Non-SIMD CPU ID frequencies: {:?}",
         sorted_non_simd_cpu_id_frequencies
     );
+
+    create_chart(
+        "simd_cpu_id_frequencies.png",
+        "SIMD CPU ID Frequencies",
+        &sorted_simd_cpu_id_frequencies,
+    )
+    .unwrap();
+
+    create_chart(
+        "non_simd_cpu_id_frequencies.png",
+        "Non-SIMD CPU ID Frequencies",
+        &sorted_non_simd_cpu_id_frequencies,
+    )
+    .unwrap();
+
     println!("Finished all calculations.");
 }
 
@@ -119,6 +135,56 @@ fn avx2_elementwise_addition_parallel(
         }
     }
 }
+
+fn create_chart(
+    file_name: &str,
+    title: &str,
+    data: &[(usize, usize)],
+) -> Result<(), Box<dyn std::error::Error>> {
+    let root = BitMapBackend::new(file_name, (1280, 720)).into_drawing_area();
+    root.fill(&WHITE)?;
+
+    let max_x = data.iter().map(|&(x, _)| x).max().unwrap_or(0) as i32;
+    let max_y = data.iter().map(|&(_, y)| y).max().unwrap_or(0) as i32;
+    let bar_width = 20;
+
+    let mut chart = ChartBuilder::on(&root)
+        .caption(title, ("sans-serif", 40).into_font())
+        .margin(5)
+        .x_label_area_size(40)
+        .y_label_area_size(40)
+        .build_cartesian_2d(0..(max_x * bar_width), 0..max_y)?;
+
+    chart
+        .configure_mesh()
+        .disable_x_mesh()
+        .disable_y_mesh()
+        .x_labels(1)
+        .y_labels(5)
+        .x_desc("CPU ID")
+        .y_desc("Frequency")
+        .axis_desc_style(("sans-serif", 15).into_font())
+        .x_label_formatter(&|x| format!("{}", x / bar_width))
+        .draw()?;
+
+    chart
+        .draw_series(
+            Histogram::vertical(&chart)
+                .style(BLUE.filled())
+                .data(data.iter().map(|&(x, y)| (x as i32 * bar_width, y as i32))),
+        )?
+        .label("Frequency")
+        .legend(move |(x, y)| Rectangle::new([(x, y), (x + 20, y + 20)], &BLUE));
+
+    chart
+        .configure_series_labels()
+        .background_style(&WHITE.mix(0.8))
+        .border_style(&BLACK)
+        .draw()?;
+
+    Ok(())
+}
+
 
 fn elementwise_addition_parallel(a: &[f32], b: &[f32], cpu_ids: Arc<Mutex<HashMap<usize, usize>>>) {
     assert_eq!(a.len(), b.len(), "Arrays must have the same length.");
