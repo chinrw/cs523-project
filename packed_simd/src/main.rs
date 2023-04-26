@@ -145,7 +145,7 @@ fn create_chart(
     root.fill(&WHITE)?;
 
     let max_x = data.iter().map(|&(x, _)| x).max().unwrap_or(0) as i32;
-    let max_y = data.iter().map(|&(_, y)| y).max().unwrap_or(0) as i32;
+    let max_y = data.iter().map(|&(_, y)| y).max().unwrap_or(0) as i32 + 10;
     let bar_width = 20;
 
     let mut chart = ChartBuilder::on(&root)
@@ -159,11 +159,11 @@ fn create_chart(
         .configure_mesh()
         .disable_x_mesh()
         .disable_y_mesh()
-        .x_labels(1)
-        .y_labels(5)
+        .x_labels(data.len())
+        .y_labels(10)
         .x_desc("CPU ID")
         .y_desc("Frequency")
-        .axis_desc_style(("sans-serif", 15).into_font())
+        .axis_desc_style(("sans-serif", 40).into_font())
         .x_label_formatter(&|x| format!("{}", x / bar_width))
         .draw()?;
 
@@ -174,17 +174,16 @@ fn create_chart(
                 .data(data.iter().map(|&(x, y)| (x as i32 * bar_width, y as i32))),
         )?
         .label("Frequency")
-        .legend(move |(x, y)| Rectangle::new([(x, y), (x + 20, y + 20)], &BLUE));
+        .legend(move |(x, y)| Rectangle::new([(x, y), (x + 20, y + 20)], BLUE));
 
     chart
         .configure_series_labels()
-        .background_style(&WHITE.mix(0.8))
-        .border_style(&BLACK)
+        .background_style(WHITE.mix(0.8))
+        .border_style(BLACK)
         .draw()?;
 
     Ok(())
 }
-
 
 fn elementwise_addition_parallel(a: &[f32], b: &[f32], cpu_ids: Arc<Mutex<HashMap<usize, usize>>>) {
     assert_eq!(a.len(), b.len(), "Arrays must have the same length.");
