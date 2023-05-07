@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use rayon::prelude::*;
 use rayon::ThreadPoolBuilder;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -96,51 +95,51 @@ fn hand_made_simd(args: &[String]) {
 }
 
 async fn stress_ng_bench_cpu() {
-    let simd_thread = 2;
-    let gcd_thread = 2;
-    // Run two thread due to hyperthreading
+    // mix of simd and non-simd
+    let simd_thread = 32;
+    let gcd_thread = 32;
+
+    // limit total opertaions
     let simd_stress_ng_command =
-        format!("stress-ng --cpu {simd_thread} --cpu-method fft --metrics-brief --cpu-ops 50000");
+        format!("stress-ng --cpu {simd_thread} --cpu-method fft --metrics-brief --cpu-ops 2000000");
     let gcd_stress_ng_command =
-        format!("stress-ng --cpu {gcd_thread} --cpu-method gcd --metrics-brief --cpu-ops 50000");
+        format!("stress-ng --cpu {gcd_thread} --cpu-method gcd --metrics-brief --cpu-ops 1000000");
+
     let simd_task = tokio::spawn(async move {
-        run_command(&simd_stress_ng_command);
+        run_command_with_priority(&simd_stress_ng_command, 0);
     });
 
     let gcd_task = tokio::spawn(async move {
-        run_command(&gcd_stress_ng_command);
+        run_command_with_priority(&gcd_stress_ng_command, 15);
     });
 
     tokio::try_join!(simd_task, gcd_task).unwrap();
 }
 
-fn stress_ng_bench_cpu_affinity() {
-    // Run two thread due to hyperthreading
-    let simd_stress_ng_command = "stress-ng --cpu 1 --cpu-method fft --metrics-brief --cpu-ops 50000";
-    let gcd_stress_ng_command = "stress-ng --cpu 1 --cpu-method gcd --metrics-brief --cpu-ops 50000";
+async fn stress_ng_bench_cpu_affinity() {
+    // mix of simd and non-simd
+    let simd_thread = 32;
+    let gcd_thread = 32;
 
-    let gcd_test_ids: Vec<usize> = (15..=16).collect(); // Adjust these values based on your CPU configuration
-    let cpu_test_ids: Vec<usize> = (0..=1).collect(); // Adjust these values based on your CPU configuration
+    let cpu_test_ids = "0-15";
+    let gcd_test_ids = "0-31";
 
-    let test_configs: Vec<(&str, usize)> = cpu_test_ids
-        .iter()
-        .map(|&id| (simd_stress_ng_command, id))
-        .chain(gcd_test_ids.iter().map(|&id| (gcd_stress_ng_command, id)))
-        .collect();
+    let simd_stress_ng_command =
+        format!("taskset -c {cpu_test_ids} stress-ng --cpu {simd_thread} --cpu-method fft --metrics-brief --cpu-ops 2000000");
+    let gcd_stress_ng_command =
+        format!("taskset -c {gcd_test_ids} stress-ng --cpu {gcd_thread} --cpu-method gcd --metrics-brief --cpu-ops 1000000");
 
-    // Create a new thread pool with the total number of threads required for both tests
-    let thread_pool = rayon::ThreadPoolBuilder::new()
-        .num_threads(test_configs.len())
-        .build()
-        .unwrap();
+    println!("Running simd stress-ng command: {}", simd_stress_ng_command);
 
-    // Use the custom thread pool to run the stress-ng commands on each CPU ID
-    thread_pool.install(|| {
-        test_configs.par_iter().for_each(|&(command, cpu_id)| {
-            println!("Running stress-ng on CPU core {}: {}", cpu_id, command);
-            run_taskset(command, cpu_id);
-        });
+    let simd_task = tokio::spawn(async move {
+        run_command_with_priority(&simd_stress_ng_command, 0);
     });
+
+    let gcd_task = tokio::spawn(async move {
+        run_command_with_priority(&gcd_stress_ng_command, 15);
+    });
+
+    tokio::try_join!(simd_task, gcd_task).unwrap();
     println!("All stress-ng instances completed.");
 }
 
@@ -151,10 +150,10 @@ fn main() {
         None => String::from("bench"),
     };
 
+    let rt = Runtime::new().unwrap();
     if bench_type == "stress_cpu_affinity" {
-        stress_ng_bench_cpu_affinity();
+        rt.block_on(stress_ng_bench_cpu_affinity())
     } else if bench_type == "stress" {
-        let rt = Runtime::new().unwrap();
         rt.block_on(stress_ng_bench_cpu());
 
         // stress_ng_bench_cpu();

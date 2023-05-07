@@ -24,7 +24,13 @@ pub fn run_command(command_str: &str) {
     let _ = child.wait();
 }
 
+pub fn run_command_with_priority(command_str: &str, priority: i32) {
+    let priority_command_str = format!("nice -n {} {}", priority, command_str);
+    run_command(&priority_command_str);
+}
+
 // Use taskset run on select cpu core
+#[allow(dead_code)]
 pub fn run_taskset(command_str: &str, cpu_id: usize) {
     let mut cpu_set: cpu_set_t = unsafe { std::mem::zeroed() };
     unsafe { CPU_ZERO(&mut cpu_set) };
