@@ -12,3 +12,4 @@ rand = "*"
 libc = "*"
 itertools = "*"
 plotters = "*"
+tokio = { version = "*", features = ["full"] }
