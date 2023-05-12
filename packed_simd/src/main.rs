@@ -96,21 +96,26 @@ fn hand_made_simd(args: &[String]) {
 
 async fn stress_ng_bench_cpu() {
     // mix of simd and non-simd
-    let simd_thread = 32;
-    let gcd_thread = 32;
+    let simd_thread = 64;
+    let gcd_thread = 64;
 
-    // limit total opertaions
+    let cpu_test_ids = "0-31";
+    let gcd_test_ids = "0-15";
+
     let simd_stress_ng_command =
-        format!("stress-ng --cpu {simd_thread} --cpu-method fft --metrics-brief --cpu-ops 2000000");
+        format!("taskset -c {cpu_test_ids} stress-ng --cpu {simd_thread} --cpu-method fft --metrics-brief --cpu-ops 3000000");
     let gcd_stress_ng_command =
-        format!("stress-ng --cpu {gcd_thread} --cpu-method gcd --metrics-brief --cpu-ops 1000000");
+        format!("taskset -c {gcd_test_ids} stress-ng --cpu {gcd_thread} --cpu-method gcd --metrics-brief --cpu-ops 2000000");
+
+    println!("Running simd stress-ng command: {}", simd_stress_ng_command);
+    println!("Running gcd stress-ng command: {}", gcd_stress_ng_command);
 
     let simd_task = tokio::spawn(async move {
-        run_command_with_priority(&simd_stress_ng_command, 0);
+        run_command_with_priority(&simd_stress_ng_command, 15);
     });
 
     let gcd_task = tokio::spawn(async move {
-        run_command_with_priority(&gcd_stress_ng_command, 15);
+        run_command_with_priority(&gcd_stress_ng_command, 0);
     });
 
     tokio::try_join!(simd_task, gcd_task).unwrap();
@@ -118,25 +123,26 @@ async fn stress_ng_bench_cpu() {
 
 async fn stress_ng_bench_cpu_affinity() {
     // mix of simd and non-simd
-    let simd_thread = 32;
-    let gcd_thread = 32;
+    let simd_thread = 64;
+    let gcd_thread = 64;
 
-    let cpu_test_ids = "0-15";
-    let gcd_test_ids = "0-31";
+    let cpu_test_ids = "0-31";
+    let gcd_test_ids = "16-31";
 
     let simd_stress_ng_command =
-        format!("taskset -c {cpu_test_ids} stress-ng --cpu {simd_thread} --cpu-method fft --metrics-brief --cpu-ops 2000000");
+        format!("taskset -c {cpu_test_ids} stress-ng --cpu {simd_thread} --cpu-method fft --metrics-brief --cpu-ops 3000000");
     let gcd_stress_ng_command =
-        format!("taskset -c {gcd_test_ids} stress-ng --cpu {gcd_thread} --cpu-method gcd --metrics-brief --cpu-ops 1000000");
+        format!("taskset -c {gcd_test_ids} stress-ng --cpu {gcd_thread} --cpu-method gcd --metrics-brief --cpu-ops 2000000");
 
     println!("Running simd stress-ng command: {}", simd_stress_ng_command);
+    println!("Running gcd stress-ng command: {}", gcd_stress_ng_command);
 
     let simd_task = tokio::spawn(async move {
-        run_command_with_priority(&simd_stress_ng_command, 0);
+        run_command_with_priority(&simd_stress_ng_command, 15);
     });
 
     let gcd_task = tokio::spawn(async move {
-        run_command_with_priority(&gcd_stress_ng_command, 15);
+        run_command_with_priority(&gcd_stress_ng_command, 0);
     });
 
     tokio::try_join!(simd_task, gcd_task).unwrap();
